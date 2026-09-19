@@ -1,5 +1,9 @@
-#!/usr/bin/with-contenv bash
+#!/bin/bash
 # Railway boot wrapper for linuxserver/heimdall.
+#
+# NOTE: plain bash, NOT with-contenv - this runs BEFORE /init, so s6's
+# container_environment envdir does not exist yet. Docker injects the
+# service variables into the process environment directly.
 #
 # Runs BEFORE the image's s6 init (/init): on a fresh volume it seeds a
 # hardened nginx site conf (basic auth on, unauthenticated /healthz route),
@@ -76,11 +80,11 @@ fi
 # --- 5. Patch a pre-existing site conf: enable auth + healthz route ---------
 # Covers volumes whose conf predates this wrapper or was regenerated from the
 # stock sample: both stock auth blocks are commented; uncomment them in place.
-if grep -q '^auth_basic_user_file' "$SITE_CONF"; then
+if grep -q 'auth_basic_user_file' "$SITE_CONF"; then
     echo "[railway-auth] Auth already enabled in site conf"
 else
-    sed -i 's|^#auth_basic_user_file /config/nginx/.htpasswd;|auth_basic_user_file /config/nginx/.htpasswd;|' "$SITE_CONF"
-    sed -i 's|^#auth_basic |auth_basic |' "$SITE_CONF"
+    sed -i 's|^\(\s*\)#auth_basic_user_file |\1auth_basic_user_file |' "$SITE_CONF"
+    sed -i 's|^\(\s*\)#auth_basic |\1auth_basic |' "$SITE_CONF"
     echo "[railway-auth] Enabled basic auth lines in existing site conf"
 fi
 
