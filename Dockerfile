@@ -17,4 +17,16 @@ RUN chmod 755 /usr/local/bin/railway-entrypoint.sh
 #   - our wrapper runs its prep, then execs /init unchanged
 #   - all state persists on the /config volume: SQLite DB (/config/www/
 #     app.sqlite), app .env, nginx confs (/config/nginx/), icons/uploads
+
+# Sensible defaults baked into the image so the template deploys with zero
+# form prompts. Every value can be overridden on Railway by adding a service
+# variable with the same name (Variables tab) and redeploying.
+ENV PUID=1000 \
+    PGID=1000 \
+    TZ=Etc/UTC \
+    ALLOW_INTERNAL_REQUESTS=true \
+    DASHBOARD_USER=admin
+
+# The login password is NOT here on purpose: DASHBOARD_PASSWORD is a
+# per-deploy generated secret (template variable default ${{secret(24)}}).
 ENTRYPOINT ["/usr/local/bin/railway-entrypoint.sh"]
